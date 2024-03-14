@@ -1,6 +1,7 @@
-package com.yavuzselimerdogan.mytravelbook
+package com.yavuzselimerdogan.mytravelbook.view
 
 import android.Manifest
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
@@ -14,6 +15,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -22,7 +25,14 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
+import com.yavuzselimerdogan.mytravelbook.R
 import com.yavuzselimerdogan.mytravelbook.databinding.ActivityMapsBinding
+import com.yavuzselimerdogan.mytravelbook.model.Place
+import com.yavuzselimerdogan.mytravelbook.roomdb.PlaceDao
+import com.yavuzselimerdogan.mytravelbook.roomdb.PlaceDatabase
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
@@ -35,6 +45,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     private var trackBoolean : Boolean? = null
     private var selectedLatitude : Double? = null
     private  var selectedLongitude : Double? = null
+    private lateinit var db : PlaceDatabase
+    private lateinit var placeDao : PlaceDao
+    val compositeDisposable : CompositeDisposable
+        get() {
+            TODO()
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +71,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
 
         selectedLatitude = 0.0
         selectedLongitude = 0.0
+
+        db = Room.databaseBuilder(applicationContext, PlaceDatabase::class.java, "Places")
+            .build()
+        placeDao = db.placeDao()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -135,12 +156,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
 
     fun save(view: View){
+        if(selectedLatitude != null && selectedLongitude != null) {
+            val place = Place(binding.placeText.toString(), selectedLatitude!!, selectedLongitude!!)
+            compositeDisposable.add(
+                placeDao.insert(place)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(this::handleResponse)
+            )
 
+        }
+    }
+
+    private fun handleResponse() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(intent)
     }
 
     fun delete(view: View){
 
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        compositeDisposable.clear()
     }
 
 
