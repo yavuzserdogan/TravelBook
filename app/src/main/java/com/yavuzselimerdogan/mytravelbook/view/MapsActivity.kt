@@ -47,10 +47,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     private  var selectedLongitude : Double? = null
     private lateinit var db : PlaceDatabase
     private lateinit var placeDao : PlaceDao
-    val compositeDisposable : CompositeDisposable
-        get() {
-            TODO()
-        }
+    private lateinit var compositeDisposable : CompositeDisposable
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
