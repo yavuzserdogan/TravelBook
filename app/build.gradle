@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt")
 }
 
+
 android {
     namespace 'com.yavuzselimerdogan.mytravelbook'
     compileSdk 34
@@ -15,8 +16,11 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "API_KEY_NAME", "\"${properties.getProperty("API_KEY_NAME")}\""
+
     }
 
     buildTypes {
